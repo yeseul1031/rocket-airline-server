@@ -2,24 +2,58 @@ const flights = require('../repository/flightList');
 
 module.exports = {
   // [GET] /flight
-  // 요청 된 departure_times, arrival_times, destination, departure 값과 동일한 값을 가진 항공편 데이터를 조회합니다.
+ 
   findAll: (req, res) => {
-    // TODO:
-    return res.status(200).send('not implemented');
+    let result = flights;
+    const { departure_times, arrival_times, destination, departure } = req.query;
+
+    if (departure_times) {
+      result = result.filter(f => f.departure_times === departure_times);
+    }
+    if (arrival_times) {
+      result = result.filter(f => f.arrival_times === arrival_times);
+    }
+    if (destination) {
+      result = result.filter(f => f.destination === destination);
+    }
+    if (departure) {
+      result = result.filter(f => f.departure === departure);
+    }
+
+    return res.status(200).json(result);
   },
+
   // [GET] /flight/:id
-  // 요청 된 id 값과 동일한 uuid 값을 가진 항공편 데이터를 조회합니다.
+  
   findById: (req, res) => {
-    // TODO:
-    return res.status(200).json('not implemented');
+    const { id } = req.params;
+    const flight = flights.find(f => f.uuid === id);
+    if (!flight) return res.status(404).json({ error: "Not Found" });
+
+   
+    return res.status(200).json([flight]);
   },
 
-  // [PUT] /flight/:id 요청을 수행합니다.
-  // 요청 된 id 값과 동일한 uuid 값을 가진 항공편 데이터를 요쳥 된 Body 데이터로 수정합니다.
+  // [PUT] /flight/:id
+  
   update: (req, res) => {
-    let data;
-    // TODO:
+    const { id } = req.params;
+    const patch = req.body;
 
-    return res.status(200).json(data);
+    const flight = flights.find(f => f.uuid === id);
+    if (!flight) return res.status(404).json({ error: "Not Found" });
+
+    if ('uuid' in patch && patch.uuid !== id) {
+      return res.status(400).json({ error: "uuid는 변경할 수 없습니다." });
+    }
+
+    const updatableFields = ['departure_times', 'arrival_times', 'destination', 'departure', 'airline'];
+    updatableFields.forEach(field => {
+      if (field in patch) {
+        flight[field] = patch[field];
+      }
+    });
+
+    return res.status(200).json(flight);
   },
 };
